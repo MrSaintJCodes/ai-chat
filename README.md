@@ -38,7 +38,7 @@ The app uses SQLite locally for development and PostgreSQL in production.
 django/
 ├── manage.py
 ├── requirements.txt
-├── labchat/                  # Django project
+├── ai_chat/                  # Django project
 │   ├── settings.py           # environment-driven config
 │   ├── urls.py               # root URL config
 │   └── wsgi.py               # WSGI entrypoint for Apache
