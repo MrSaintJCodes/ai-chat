@@ -57,87 +57,16 @@
 </div>
 
 <script>
-document.addEventListener("DOMContentLoaded", function () {
-  const chat = document.getElementById("chat");
-  const form = document.getElementById("chat-form");
-  const textarea = document.getElementById("msg");
-
-  function scrollToBottom() {
-    chat.scrollTop = chat.scrollHeight;
-  }
-
-  function addMessage(role, content, isLoading=false) {
-    const msgDiv = document.createElement("div");
-    msgDiv.className = "message " + role;
-
-    const label = document.createElement("div");
-    label.className = "label";
-    label.innerText = role === "user" ? "You" : "Assistant";
-
-    const bubble = document.createElement("div");
-    bubble.className = "bubble";
-
-    if (isLoading) {
-      bubble.innerHTML = `<span class="dots">Thinking</span>`;
-    } else {
-      bubble.innerText = content;
-    }
-
-    msgDiv.appendChild(label);
-    msgDiv.appendChild(bubble);
-    chat.appendChild(msgDiv);
-
-    scrollToBottom();
-    return bubble; // return so we can update later
-  }
-
-  form.addEventListener("submit", async function (e) {
-    e.preventDefault();
-
-    const message = textarea.value.trim();
-    if (!message) return;
-
-    // 1. Show user message instantly
-    addMessage("user", message);
-
-    // 2. Show loading message
-    const loadingBubble = addMessage("assistant", "", true);
-
-    textarea.value = "";
-
-    try {
-      const response = await fetch("{% url 'chat' %}", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-          "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value,
-          "X-Requested-With": "XMLHttpRequest"
-        },
-        body: new URLSearchParams({
-          message: message,
-          action: "chat"
-        })
-      });
-
-      const data = await response.json();
-
-      // 3. Replace loading with real response
-      loadingBubble.innerText = data.reply;
-
-    } catch (err) {
-      loadingBubble.innerText = "Error: could not get response.";
-    }
-
-    scrollToBottom();
-  });
-
-  // Enter to send
-  textarea.addEventListener("keydown", function(e) {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      form.dispatchEvent(new Event("submit"));
-    }
-  });
-});
+  window.onload = function() {
+    var chat = document.getElementById("chat");
+    if (chat) chat.scrollTop = chat.scrollHeight;
+    var ta = document.getElementById("msg");
+    if (ta) ta.addEventListener("keydown", function(e) {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        document.getElementById("chat-form").submit();
+      }
+    });
+  };
 </script>
 {% endblock %}

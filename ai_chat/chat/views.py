@@ -5,6 +5,7 @@ from django.shortcuts import render, redirect
 from django.views.decorators.http import require_http_methods
 from django.conf import settings
 from .models import Conversation
+from django.http import JsonResponse
 
 def get_ai_reply(messages):
     response = requests.post(
@@ -28,7 +29,7 @@ def build_messages(session_id, new_user_message):
     # Get history BEFORE the new message
     history = list(
         Conversation.objects.filter(session_id=session_id)
-        .order_by("created_at")
+        .order_by("created_at")[:5]
         .values("role", "content")
     )
 
@@ -62,51 +63,56 @@ def chat_view(request):
 
         if action == "chat":
             user_message = request.POST.get("message", "").strip()
+
             if user_message:
                 try:
-                    # Step 1 — build message list from history
-                    # BEFORE saving the new message
                     messages = build_messages(session_id, user_message)
 
-                    # Step 2 — save user message to DB
+                    # Save user message
                     Conversation.objects.create(
                         session_id=session_id,
                         role="user",
                         content=user_message
                     )
 
-                    # Step 3 — call Ollama with full context
+                    # Call Ollama
                     reply = get_ai_reply(messages)
 
-                    # Step 4 — save AI reply to DB
+                    # Save reply
                     Conversation.objects.create(
                         session_id=session_id,
                         role="assistant",
                         content=reply
                     )
 
+                    # ✅ RETURN JSON (for fetch)
+                    if request.headers.get("x-requested-with") == "XMLHttpRequest":
+                        return JsonResponse({
+                            "success": True,
+                            "reply": reply
+                        })
+
                 except Exception as e:
                     error = traceback.format_exc()
+
+                    if request.headers.get("x-requested-with") == "XMLHttpRequest":
+                        return JsonResponse({
+                            "success": False,
+                            "error": error
+                        }, status=500)
 
         elif action == "clear":
             Conversation.objects.filter(session_id=session_id).delete()
 
-        if error:
-            history = Conversation.objects.filter(
-                session_id=session_id
-            ).order_by("created_at")[:40]
-            return render(request, "chat/chat.html", {
-                "history": history,
-                "error":   error
-            })
-
+        # ✅ fallback (non-AJAX form submit)
         return redirect("chat")
 
+    # GET request
     history = Conversation.objects.filter(
         session_id=session_id
     ).order_by("created_at")[:40]
 
     return render(request, "chat/chat.html", {
         "history": history,
-        "error":   error,
+        "error": error,
     })

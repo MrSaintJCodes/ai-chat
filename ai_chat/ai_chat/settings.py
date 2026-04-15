@@ -72,16 +72,30 @@ WSGI_APPLICATION = 'ai_chat.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.environ.get("DB_NAME", "labdb"),
-        "USER": os.environ.get("DB_USER", "labadmin"),
-        "PASSWORD": os.environ.get("DB_PASSWORD", "123Test!"),
-        "HOST": os.environ.get("DB_HOST", "localhost"),
-        "PORT": os.environ.get("DB_PORT", "5432"),
+if os.environ.get("DB_HOST"):
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": os.environ.get("DB_NAME", "labdb"),
+            "USER": os.environ.get("DB_USER", "labadmin"),
+            "PASSWORD": os.environ.get("DB_PASSWORD", "123Test!"),
+            "HOST": os.environ.get("DB_HOST", "localhost"),
+            "PORT": os.environ.get("DB_PORT", "5432"),
+        }
     }
-}
+else:
+    # ✅ Fallback to SQLite
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
+        }
+    }
+
+
+CSRF_TRUSTED_ORIGINS = [
+    os.environ.get("CSRF_TRUSTED_ORIGINS", "http://localhost:80"),
+]
 
 
 # Password validation
@@ -117,8 +131,12 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
+STATIC_URL = '/static/'
 
-STATIC_URL = 'static/'
+STATICFILES_DIRS = [
+    BASE_DIR / "static",
+]
+
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 # Default primary key field type
