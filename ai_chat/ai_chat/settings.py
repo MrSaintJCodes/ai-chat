@@ -145,5 +145,6 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # AI backend
-OLLAMA_HOST  = os.environ.get("OLLAMA_HOST", "http://localhost:11434")
-OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "llama3.2")
+OLLAMA_HOST         = os.environ.get("OLLAMA_HOST", "http://localhost:11434")
+OLLAMA_MODEL        = os.environ.get("OLLAMA_MODEL", "llama3.2:1b")
+OLLAMA_TITLE_MODEL  = os.environ.get("OLLAMA_TITLE_MODEL", "llama3.2:1b")
