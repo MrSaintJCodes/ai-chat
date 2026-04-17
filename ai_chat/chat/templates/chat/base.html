@@ -3,7 +3,7 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>{% block title %}Lab Chatbot{% endblock %}</title>
+  <title>{% block title %}CloudAI{% endblock %}</title>
   <link rel="stylesheet" href="{% static 'css/chat.css' %}">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -15,8 +15,17 @@
 </head>
 <body>
   <div class="header">
-    <h1>{% block header %}Lab Chatbot{% endblock %}</h1>
-    <span class="meta">Django · PostgreSQL · AWS</span>
+    <h1>{% block header %}CloudAI{% endblock %}</h1>
+    <div style="display:flex; gap:16px; align-items:center;">
+      <span class="meta">Django · Ollama · Cloud </span>
+      {% if request.user.is_authenticated %}
+        <span class="meta">{{ request.user.email }}</span>
+        <a href="{% url 'logout' %}" style="color:white; text-decoration:none;">Logout</a>
+      {% else %}
+        <a href="{% url 'login' %}" style="color:white; text-decoration:none;">Login</a>
+        <a href="{% url 'signup' %}" style="color:white; text-decoration:none;">Sign Up</a>
+      {% endif %}
+    </div>
   </div>
   {% block content %}{% endblock %}
 </body>
