@@ -3,14 +3,19 @@ import traceback
 from django.conf import settings
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.views import LoginView, LogoutView
+from django.contrib.auth.views import LoginView, LogoutView, PasswordChangeView
+from django.contrib.messages.views import SuccessMessageMixin
+from django.contrib import messages
+from django.urls import reverse_lazy
 from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.decorators.http import require_http_methods
+from chat.services.context_builder import build_cloud_context
+import markdown
 
-from .forms import SignUpForm, EmailAuthenticationForm
-from .models import Conversation, ChatSession
-
+from .forms import SignUpForm, EmailAuthenticationForm, UserPreferenceForm, AWSConnectorForm, AzureConnectorForm, GCPConnectorForm
+from .models import Conversation, ChatSession, CloudProviderSetting, UserPreference
+from .utils.crypto import encrypt_value, decrypt_value
 
 def generate_chat_title(user_message):
     try:
@@ -58,32 +63,43 @@ def get_ai_reply(messages):
     response.raise_for_status()
     return response.json()["message"]["content"]
 
-
 def build_messages(session, new_user_message):
-    history = list(
-        session.messages.all()
-        .order_by("created_at")[:5]
-        .values("role", "content")
-    )
+    history = session.messages.all().order_by("created_at")[:5]
 
-    return [
+    # 👇 NEW: inject cloud context
+    cloud_context = build_cloud_context(session.user, new_user_message)
+
+    messages = [
         {
             "role": "system",
             "content": (
-                "You are a helpful assistant running on a "
-                "production-grade AWS infrastructure built with "
-                "Terraform and Ansible. The stack includes: 3-tier VPC, "
-                "ALB, Auto Scaling Group, EFS, RDS PostgreSQL, WAF, "
-                "CloudWatch, AWS Backup, Secrets Manager, and IAM "
-                "least privilege. Be concise and helpful."
+                "You are a cloud operations assistant. "
+                "You help analyze AWS, Azure, and GCP environments. "
+                "Use provided infrastructure data when available."
             )
         }
-    ] + [
-        {"role": m["role"], "content": m["content"]}
-        for m in history
-    ] + [
-        {"role": "user", "content": new_user_message}
     ]
+
+    # 👇 ONLY add cloud context if relevant
+    if cloud_context:
+        messages.append({
+            "role": "system",
+            "content": f"REAL CLOUD DATA:\n{cloud_context}"
+        })
+
+    # history
+    messages += [
+        {"role": m.role, "content": m.content}
+        for m in history
+    ]
+
+    # new message
+    messages.append({
+        "role": "user",
+        "content": new_user_message
+    })
+
+    return messages
 
 
 def signup_view(request):
@@ -98,6 +114,7 @@ def signup_view(request):
             user.username = form.cleaned_data["email"]
             user.set_password(form.cleaned_data["password1"])
             user.save()
+            UserPreference.objects.get_or_create(user=user)
             login(request, user)
             return redirect("chat_home")
     else:
@@ -122,7 +139,9 @@ def home_redirect(request):
     if latest_session:
         return redirect("chat", session_id=latest_session.id)
 
-    return render(request, "chat/empty.html")
+    return render(request, "chat/empty.html", {
+        "sessions": [],
+    })
 
 
 @login_required
@@ -173,7 +192,14 @@ def chat_view(request, session_id):
                         session.title = new_title
                         session.save()
 
-                    reply = get_ai_reply(messages)
+                    raw_reply = get_ai_reply(messages)
+
+                    html_reply = markdown.markdown(
+                        raw_reply,
+                        extensions=["fenced_code", "codehilite"]
+                    )
+
+                    reply = html_reply
 
                     Conversation.objects.create(
                         session=session,
@@ -212,3 +238,93 @@ def chat_view(request, session_id):
         "sessions": sessions,
         "current_session": session,
     })
+
+@login_required
+def settings_view(request):
+    preference, _ = UserPreference.objects.get_or_create(user=request.user)
+
+    aws_config, _ = CloudProviderSetting.objects.get_or_create(
+        user=request.user,
+        provider="aws",
+        defaults={"display_name": "AWS Connector"}
+    )
+    azure_config, _ = CloudProviderSetting.objects.get_or_create(
+        user=request.user,
+        provider="azure",
+        defaults={"display_name": "Azure Connector"}
+    )
+    gcp_config, _ = CloudProviderSetting.objects.get_or_create(
+        user=request.user,
+        provider="gcp",
+        defaults={"display_name": "GCP Connector"}
+    )
+
+    # decrypt for display
+    aws_initial = {
+        "enabled": aws_config.enabled,
+        "display_name": aws_config.display_name,
+        "aws_access_key_id": decrypt_value(aws_config.aws_access_key_id) if aws_config.aws_access_key_id else "",
+        "aws_secret_access_key": decrypt_value(aws_config.aws_secret_access_key) if aws_config.aws_secret_access_key else "",
+        "aws_region": aws_config.aws_region,
+    }
+
+    azure_initial = {
+        "enabled": azure_config.enabled,
+        "display_name": azure_config.display_name,
+        "azure_tenant_id": azure_config.azure_tenant_id,
+        "azure_client_id": azure_config.azure_client_id,
+        "azure_client_secret": decrypt_value(azure_config.azure_client_secret) if azure_config.azure_client_secret else "",
+        "azure_subscription_id": azure_config.azure_subscription_id,
+    }
+
+    gcp_initial = {
+        "enabled": gcp_config.enabled,
+        "display_name": gcp_config.display_name,
+        "gcp_project_id": gcp_config.gcp_project_id,
+        "gcp_service_account_json": decrypt_value(gcp_config.gcp_service_account_json) if gcp_config.gcp_service_account_json else "",
+    }
+
+    if request.method == "POST":
+        preference_form = UserPreferenceForm(request.POST, instance=preference)
+        aws_form = AWSConnectorForm(request.POST, instance=aws_config, prefix="aws")
+        azure_form = AzureConnectorForm(request.POST, instance=azure_config, prefix="azure")
+        gcp_form = GCPConnectorForm(request.POST, instance=gcp_config, prefix="gcp")
+
+        if all([preference_form.is_valid(), aws_form.is_valid(), azure_form.is_valid(), gcp_form.is_valid()]):
+            preference_form.save()
+
+            aws_obj = aws_form.save(commit=False)
+            aws_obj.aws_access_key_id = encrypt_value(aws_form.cleaned_data.get("aws_access_key_id", ""))
+            aws_obj.aws_secret_access_key = encrypt_value(aws_form.cleaned_data.get("aws_secret_access_key", ""))
+            aws_obj.save()
+
+            azure_obj = azure_form.save(commit=False)
+            azure_obj.azure_client_secret = encrypt_value(azure_form.cleaned_data.get("azure_client_secret", ""))
+            azure_obj.save()
+
+            gcp_obj = gcp_form.save(commit=False)
+            gcp_obj.gcp_service_account_json = encrypt_value(gcp_form.cleaned_data.get("gcp_service_account_json", ""))
+            gcp_obj.save()
+
+            messages.success(request, "Preferences and cloud connector settings saved.")
+            return redirect("settings")
+    else:
+        preference_form = UserPreferenceForm(instance=preference)
+        aws_form = AWSConnectorForm(instance=aws_config, prefix="aws", initial=aws_initial)
+        azure_form = AzureConnectorForm(instance=azure_config, prefix="azure", initial=azure_initial)
+        gcp_form = GCPConnectorForm(instance=gcp_config, prefix="gcp", initial=gcp_initial)
+
+    return render(request, "chat/settings.html", {
+        "preference_form": preference_form,
+        "aws_form": aws_form,
+        "azure_form": azure_form,
+        "gcp_form": gcp_form,
+    })
+    
+class CustomPasswordChangeView(SuccessMessageMixin, PasswordChangeView):
+    template_name = "chat/password_change.html"
+    success_url = reverse_lazy("settings")
+    success_message = "Your password was updated successfully."
+    
+def landing_view(request):
+    return render(request, "chat/landing.html")

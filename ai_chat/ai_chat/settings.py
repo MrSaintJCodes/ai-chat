@@ -157,3 +157,6 @@ LOGOUT_REDIRECT_URL = "login"
 AUTHENTICATION_BACKENDS = [
     "chat.backends.EmailBackend",
 ]
+
+# Cloud Setting(s)
+CLOUD_CREDENTIALS_KEY = os.getenv("CLOUD_CREDENTIALS_KEY", "k8FvX1Z0mS6u2Yk6v9u3lT5m0sQyXnXk8g1P4Wb3T2c=")

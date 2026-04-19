@@ -1,16 +1,41 @@
 {% extends "chat/base.html" %}
 
 {% block content %}
-<div style="display:flex; height:calc(100vh - 60px);">
-  <div style="width:250px; border-right:1px solid #eee; padding:16px; background:#fafafa;">
-    <a href="{% url 'new_chat' %}"
-       style="display:inline-block; background:#ff9900; color:white; padding:10px 14px; border-radius:8px; text-decoration:none;">
-      + New Chat
-    </a>
-  </div>
+<div class="chat-layout fade-in">
 
-  <div style="flex:1; display:flex; align-items:center; justify-content:center; color:#888; font-size:18px;">
-    No chats yet. Create a new chat to get started.
-  </div>
+  <!-- SIDEBAR -->
+  <aside class="chat-sidebar card">
+    <div class="chat-sidebar-header">
+      <a href="{% url 'new_chat' %}" class="primary-btn new-chat-btn">+ New Chat</a>
+    </div>
+
+    <div class="chat-session-list">
+      <div class="empty-sidebar">
+        <div class="empty-sidebar-card">
+          No chats yet.
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN CHAT AREA -->
+  <section class="chat-main card">
+    <div class="chat-wrap" id="chat">
+      <div class="chat-empty-state">
+        <h2>Start a conversation</h2>
+        <p class="empty-subtitle">
+          Ask anything about your infrastructure, cloud, or applications.
+        </p>
+
+        <div class="empty-actions">
+          <a href="{% url 'new_chat' %}" class="primary-btn big-btn">+ New Chat</a>
+        </div>
+      </div>
+    </div>
+
+
+  </section>
+
 </div>
+
 {% endblock %}

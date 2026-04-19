@@ -1,0 +1,157 @@
+{% extends "chat/base.html" %}
+
+{% block content %}
+<div class="settings-shell fade-in">
+
+  <!-- SETTINGS SIDEBAR -->
+  <aside class="settings-nav card">
+    <h3>Preferences</h3>
+
+    <a href="#appearance" class="settings-nav-link active">Appearance</a>
+    <a href="#account" class="settings-nav-link">Account Settings</a>
+    <a href="#cloud" class="settings-nav-link">Cloud Settings</a>
+
+    <div class="settings-nav-footer">
+      <a href="{% url 'chat_home' %}" class="secondary-btn" style="text-decoration:none; display:inline-flex; justify-content:center;">
+        ← Back to Chat
+      </a>
+    </div>
+  </aside>
+
+  <!-- SETTINGS CONTENT -->
+  <div class="settings-content">
+
+    <div class="settings-header card">
+      <h2>Preferences & Cloud Connectors</h2>
+      <p>
+        Configure your interface preferences, account options, and the cloud providers your AI assistant can read from.
+      </p>
+    </div>
+
+    <form method="POST" class="settings-form">
+      {% csrf_token %}
+
+      <!-- Appearance -->
+      <section id="appearance" class="settings-section card">
+        <h3>Appearance</h3>
+        <div class="settings-panel-body">
+          {{ preference_form.as_p }}
+        </div>
+      </section>
+
+      <!-- Account -->
+      <section id="account" class="settings-section card">
+        <h3>Account Settings</h3>
+        <div class="settings-panel-body settings-account-actions">
+          <a href="{% url 'password_change' %}" class="secondary-btn" style="text-decoration:none;">
+            Change Password
+          </a>
+        </div>
+      </section>
+
+      <!-- Cloud -->
+      <section id="cloud" class="settings-section card">
+        <h3>Cloud Settings</h3>
+
+        <div class="connector-grid">
+
+          <!-- AWS -->
+          <div class="connector-card">
+            <div class="connector-card-header">
+              <h4>AWS Connector</h4>
+              <label class="toggle-switch">
+                {{ aws_form.enabled }}
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+
+            <div class="connector-fields">
+              <p>
+                <label for="{{ aws_form.display_name.id_for_label }}">Display name:</label>
+                {{ aws_form.display_name }}
+              </p>
+              <p>
+                <label for="{{ aws_form.aws_access_key_id.id_for_label }}">AWS access key id:</label>
+                {{ aws_form.aws_access_key_id }}
+              </p>
+              <p>
+                <label for="{{ aws_form.aws_secret_access_key.id_for_label }}">AWS secret access key:</label>
+                {{ aws_form.aws_secret_access_key }}
+              </p>
+              <p>
+                <label for="{{ aws_form.aws_region.id_for_label }}">AWS region:</label>
+                {{ aws_form.aws_region }}
+              </p>
+            </div>
+          </div>
+
+          <!-- Azure -->
+          <div class="connector-card">
+            <div class="connector-card-header">
+              <h4>Azure Connector</h4>
+              <label class="toggle-switch">
+                {{ azure_form.enabled }}
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+
+            <div class="connector-fields">
+              <p>
+                <label for="{{ azure_form.display_name.id_for_label }}">Display name:</label>
+                {{ azure_form.display_name }}
+              </p>
+              <p>
+                <label for="{{ azure_form.azure_tenant_id.id_for_label }}">Tenant ID:</label>
+                {{ azure_form.azure_tenant_id }}
+              </p>
+              <p>
+                <label for="{{ azure_form.azure_client_id.id_for_label }}">Client ID:</label>
+                {{ azure_form.azure_client_id }}
+              </p>
+              <p>
+                <label for="{{ azure_form.azure_client_secret.id_for_label }}">Client Secret:</label>
+                {{ azure_form.azure_client_secret }}
+              </p>
+              <p>
+                <label for="{{ azure_form.azure_subscription_id.id_for_label }}">Subscription ID:</label>
+                {{ azure_form.azure_subscription_id }}
+              </p>
+            </div>
+          </div>
+
+          <!-- GCP -->
+          <div class="connector-card connector-card-full">
+            <div class="connector-card-header">
+              <h4>GCP Connector</h4>
+              <label class="toggle-switch">
+                {{ gcp_form.enabled }}
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+
+            <div class="connector-fields">
+              <p>
+                <label for="{{ gcp_form.display_name.id_for_label }}">Display name:</label>
+                {{ gcp_form.display_name }}
+              </p>
+              <p>
+                <label for="{{ gcp_form.gcp_project_id.id_for_label }}">Project ID:</label>
+                {{ gcp_form.gcp_project_id }}
+              </p>
+              <p>
+                <label for="{{ gcp_form.gcp_service_account_json.id_for_label }}">Service Account JSON:</label>
+                {{ gcp_form.gcp_service_account_json }}
+              </p>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <div class="settings-actions">
+        <button type="submit" class="primary-btn">Save Settings</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

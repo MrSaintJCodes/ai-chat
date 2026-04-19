@@ -1,32 +1,60 @@
 {% load static %}
 <!DOCTYPE html>
-<html>
+<html lang="en" data-theme="{% if request.user.is_authenticated and request.user.preferences %}{{ request.user.preferences.theme }}{% else %}system{% endif %}">
 <head>
   <meta charset="utf-8">
-  <title>{% block title %}CloudAI{% endblock %}</title>
-  <link rel="stylesheet" href="{% static 'css/chat.css' %}">
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: Arial, sans-serif; background: #f0f2f5; }
-    .header { background: #232f3e; color: white; padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; }
-    .header h1 { font-size: 18px; font-weight: normal; }
-    .header .meta { font-size: 12px; color: #aaa; }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Lab Chatbot{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'css/app.css' %}">
+  <link rel="stylesheet" href="{% static 'css/pygments.css' %}">
+  <script defer src="{% static 'js/app.js' %}"></script>
 </head>
 <body>
-  <div class="header">
-    <h1>{% block header %}CloudAI{% endblock %}</h1>
-    <div style="display:flex; gap:16px; align-items:center;">
-      <span class="meta">Django · Ollama · Cloud </span>
-      {% if request.user.is_authenticated %}
-        <span class="meta">{{ request.user.email }}</span>
-        <a href="{% url 'logout' %}" style="color:white; text-decoration:none;">Logout</a>
-      {% else %}
-        <a href="{% url 'login' %}" style="color:white; text-decoration:none;">Login</a>
-        <a href="{% url 'signup' %}" style="color:white; text-decoration:none;">Sign Up</a>
-      {% endif %}
+  <div id="page-loader" class="page-loader hidden">
+    <div class="loader-card">
+      <div class="spinner"></div>
+      <div class="loader-text">Loading platform...</div>
     </div>
   </div>
-  {% block content %}{% endblock %}
+
+  <header class="site-header">
+    <div class="site-brand">
+      <div class="site-logo">🤖</div>
+      <div>
+        <h1>{% block header %}Lab Chatbot{% endblock %}</h1>
+        <p class="site-subtitle">AI chat platform with private sessions</p>
+      </div>
+    </div>
+
+    <nav class="site-nav">
+      {% if request.user.is_authenticated %}
+        <span class="nav-user">{{ request.user.email }}</span>
+
+        <div class="nav-dropdown">
+          <button class="nav-dropdown-btn" type="button">Options ▾</button>
+          <div class="nav-dropdown-menu">
+            <a href="{% url 'settings' %}">Preferences</a>
+            <a href="{% url 'password_change' %}">Change Password</a>
+            <a href="{% url 'logout' %}">Logout</a>
+          </div>
+        </div>
+      {% else %}
+        <a href="{% url 'login' %}" class="nav-link-btn">Login</a>
+        <a href="{% url 'signup' %}" class="nav-link-btn primary">Sign Up</a>
+      {% endif %}
+    </nav>
+  </header>
+
+  <main class="site-main">
+    {% if messages %}
+      <div class="flash-wrap">
+        {% for message in messages %}
+          <div class="flash-message">{{ message }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    {% block content %}{% endblock %}
+  </main>
 </body>
 </html>

@@ -1,0 +1,415 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lab Chatbot</title>
+  <link rel="stylesheet" href="{% static 'css/app.css' %}">
+  <style>
+    body {
+      margin: 0;
+      min-height: 100vh;
+      overflow: hidden;
+      font-family: Arial, sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(255,153,0,0.18), transparent 28%),
+        radial-gradient(circle at bottom right, rgba(59,130,246,0.16), transparent 24%),
+        linear-gradient(135deg, #020617 0%, #08142e 50%, #071124 100%);
+      color: #f8fafc;
+    }
+
+    .landing-shell {
+      height: 100vh;
+      display: grid;
+      grid-template-rows: auto 1fr;
+      padding: 28px 32px;
+    }
+
+    .landing-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+    }
+
+    .landing-brand {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .landing-logo {
+      width: 58px;
+      height: 58px;
+      border-radius: 18px;
+      display: grid;
+      place-items: center;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.10);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.25);
+      font-size: 28px;
+    }
+
+    .landing-brand h1 {
+      margin: 0;
+      font-size: 34px;
+      line-height: 1;
+    }
+
+    .landing-brand p {
+      margin: 6px 0 0;
+      color: #94a3b8;
+      font-size: 14px;
+    }
+
+    .landing-nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .landing-link {
+      text-decoration: none;
+      padding: 12px 18px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.05);
+      color: white;
+      transition: transform 0.18s ease, background 0.18s ease;
+    }
+
+    .landing-link:hover {
+      transform: translateY(-1px);
+      background: rgba(255,255,255,0.09);
+    }
+
+    .landing-link.primary {
+      background: #ff9900;
+      border-color: #ff9900;
+      color: white;
+      box-shadow: 0 12px 30px rgba(255,153,0,0.25);
+    }
+
+    .landing-main {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      align-items: center;
+      gap: 40px;
+      max-width: 1400px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    .hero-copy {
+      max-width: 720px;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.10);
+      color: #cbd5e1;
+      font-size: 13px;
+      margin-bottom: 24px;
+    }
+
+    .hero-title {
+      font-size: clamp(42px, 6vw, 78px);
+      line-height: 0.98;
+      margin: 0 0 20px;
+      letter-spacing: -0.03em;
+    }
+
+    .hero-title .accent {
+      color: #ff9900;
+    }
+
+    .hero-text {
+      font-size: 18px;
+      line-height: 1.6;
+      color: #94a3b8;
+      max-width: 660px;
+      margin-bottom: 30px;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin-bottom: 32px;
+    }
+
+    .hero-btn {
+      text-decoration: none;
+      padding: 15px 22px;
+      border-radius: 16px;
+      font-weight: 600;
+      transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+    }
+
+    .hero-btn.primary {
+      background: #ff9900;
+      color: white;
+      box-shadow: 0 18px 40px rgba(255,153,0,0.28);
+    }
+
+    .hero-btn.secondary {
+      background: rgba(255,255,255,0.05);
+      color: white;
+      border: 1px solid rgba(255,255,255,0.12);
+    }
+
+    .hero-btn:hover {
+      transform: translateY(-2px);
+    }
+
+    .cloud-row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .cloud-pill {
+      padding: 12px 16px;
+      border-radius: 14px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.10);
+      color: #e2e8f0;
+      font-size: 14px;
+    }
+
+    .hero-visual {
+      display: flex;
+      justify-content: center;
+    }
+
+    .hero-card {
+      width: 100%;
+      max-width: 520px;
+      min-height: 560px;
+      border-radius: 28px;
+      padding: 24px;
+      background: linear-gradient(180deg, rgba(15,23,42,0.96), rgba(15,23,42,0.82));
+      border: 1px solid rgba(255,255,255,0.10);
+      box-shadow: 0 30px 80px rgba(0,0,0,0.35);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at top right, rgba(255,153,0,0.15), transparent 24%),
+        radial-gradient(circle at bottom left, rgba(59,130,246,0.18), transparent 28%);
+      pointer-events: none;
+    }
+
+    .mini-window {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      height: 100%;
+    }
+
+    .mini-topbar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .mini-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.20);
+    }
+
+    .mini-panel {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 22px;
+      padding: 20px;
+    }
+
+    .mini-title {
+      font-size: 20px;
+      margin: 0 0 10px;
+    }
+
+    .mini-sub {
+      color: #94a3b8;
+      font-size: 14px;
+      line-height: 1.5;
+      margin: 0;
+    }
+
+    .feature-stack {
+      display: grid;
+      gap: 12px;
+    }
+
+    .feature-item {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      padding: 14px 16px;
+      border-radius: 18px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .feature-icon {
+      width: 38px;
+      height: 38px;
+      display: grid;
+      place-items: center;
+      border-radius: 12px;
+      background: rgba(255,153,0,0.14);
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    .feature-item strong {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 15px;
+    }
+
+    .feature-item span {
+      color: #94a3b8;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    @media (max-width: 1024px) {
+      body {
+        overflow-y: auto;
+      }
+
+      .landing-shell {
+        height: auto;
+        min-height: 100vh;
+      }
+
+      .landing-main {
+        grid-template-columns: 1fr;
+        padding: 24px 0 32px;
+      }
+
+      .hero-card {
+        min-height: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="landing-shell">
+    <div class="landing-nav">
+      <div class="landing-brand">
+        <div class="landing-logo">🤖</div>
+        <div>
+          <h1>Lab Chatbot</h1>
+          <p>Private AI assistant for cloud, infrastructure, and operations.</p>
+        </div>
+      </div>
+
+      <div class="landing-nav-actions">
+        <a href="{% url 'login' %}" class="landing-link">Sign In</a>
+        <a href="{% url 'signup' %}" class="landing-link primary">Create Account</a>
+      </div>
+    </div>
+
+    <div class="landing-main">
+      <div class="hero-copy">
+        <div class="hero-badge">
+          <span>⚡</span>
+          Built for cloud operations, troubleshooting, and AI-assisted analysis
+        </div>
+
+        <h2 class="hero-title">
+          One AI workspace for <span class="accent">AWS</span>, <span class="accent">Azure</span>, and <span class="accent">GCP</span>.
+        </h2>
+
+        <p class="hero-text">
+          Lab Chatbot is a secure AI application designed to help users interact with infrastructure context, organize conversations by topic, and build toward cloud-aware automation across major platforms.
+        </p>
+
+        <div class="hero-actions">
+          <a href="{% url 'signup' %}" class="hero-btn primary">Create Account</a>
+          <a href="{% url 'login' %}" class="hero-btn secondary">Sign In</a>
+        </div>
+
+        <div class="cloud-row">
+          <div class="cloud-pill">AWS-ready</div>
+          <div class="cloud-pill">Azure-ready</div>
+          <div class="cloud-pill">GCP-ready</div>
+          <div class="cloud-pill">Private user chat history</div>
+        </div>
+      </div>
+
+      <div class="hero-visual">
+        <div class="hero-card">
+          <div class="mini-window">
+            <div class="mini-topbar">
+              <div class="mini-dot"></div>
+              <div class="mini-dot"></div>
+              <div class="mini-dot"></div>
+            </div>
+
+            <div class="mini-panel">
+              <h3 class="mini-title">Cloud-aware conversations</h3>
+              <p class="mini-sub">
+                Ask operational questions, review infrastructure patterns, and organize sessions per topic with a polished, private AI chat experience.
+              </p>
+            </div>
+
+            <div class="feature-stack">
+              <div class="feature-item">
+                <div class="feature-icon">☁️</div>
+                <div>
+                  <strong>Multi-cloud focus</strong>
+                  <span>Designed to evolve across AWS, Azure, and GCP connectors.</span>
+                </div>
+              </div>
+
+              <div class="feature-item">
+                <div class="feature-icon">🔒</div>
+                <div>
+                  <strong>Private accounts</strong>
+                  <span>Each user keeps their own sessions, preferences, and chat history.</span>
+                </div>
+              </div>
+
+              <div class="feature-item">
+                <div class="feature-icon">⚙️</div>
+                <div>
+                  <strong>Operational workflows</strong>
+                  <span>Built for troubleshooting, automation ideas, and infrastructure analysis.</span>
+                </div>
+              </div>
+
+              <div class="feature-item">
+                <div class="feature-icon">🧠</div>
+                <div>
+                  <strong>AI-organized sessions</strong>
+                  <span>Conversations can be structured by topic with generated titles and a cleaner UI.</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</body>
+</html>

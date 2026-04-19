@@ -1,15 +1,14 @@
 {% extends "chat/base.html" %}
 
 {% block content %}
-<div style="max-width:420px; margin:60px auto; background:white; padding:24px; border-radius:12px; box-shadow:0 2px 10px rgba(0,0,0,0.08);">
-  <h2 style="margin-bottom:20px;">Login</h2>
+<div class="auth-card card fade-in">
+  <h2>Welcome back</h2>
+  <p style="color:var(--muted);">Sign in to access your private chat sessions.</p>
 
-  <form method="POST">
+  <form method="POST" class="auth-form" data-show-loader="true">
     {% csrf_token %}
     {{ form.as_p }}
-    <button type="submit" style="background:#ff9900; color:white; border:none; padding:10px 16px; border-radius:8px; cursor:pointer;">
-      Login
-    </button>
+    <button type="submit" class="primary-btn">Login</button>
   </form>
 
   <p style="margin-top:16px;">
